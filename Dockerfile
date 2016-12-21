@@ -12,6 +12,7 @@ RUN set -ex \
 RUN apk del .build-deps-git
 
 COPY *.go src/github.com/vadd/verbum/
+COPY templates templates
 RUN go install github.com/vadd/verbum
 
 EXPOSE 8080

@@ -1,18 +1,18 @@
 package main
 
 import (
-	"io"
+	"html/template"
 	"log"
+	"net/http"
 	"os"
-	//"fmt"
+
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"net/http"
 )
 
 func main() {
 	router := mux.NewRouter().StrictSlash(true)
-	router.HandleFunc("/", IndexEndpoint).Methods("GET")
+	router.HandleFunc("/", indexEndpoint).Methods("GET")
 
 	log.Fatal(http.ListenAndServe(
 		":8080",
@@ -20,6 +20,16 @@ func main() {
 	))
 }
 
-func IndexEndpoint(w http.ResponseWriter, r *http.Request) {
-	io.WriteString(w, "Ololo")
+func indexEndpoint(w http.ResponseWriter, r *http.Request) {
+	t, err := template.ParseFiles("templates/index.gohtml")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = t.Execute(w, nil)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
