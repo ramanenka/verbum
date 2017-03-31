@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Verbum - Анлайн Слоўнік Беларускай Мовы</title>
+    <meta name="viewport" content="width=device-width">
+    <style media="screen">
+      html {min-height: 100%; }
+      body {margin: 0;}
+
+      textarea, input[type="text"], input[type="button"], input[type="submit"] {
+        -webkit-appearance: none; border-radius: 0; outline: none; }
+
+      .content {max-width: 800px; margin: 0 auto; padding: 5px;}
+
+      #search {position:relative;}
+      .search-input {margin: 0 0 0 0; display: flex; align-items: stretch;}
+
+      .search-input .input-box {flex: 2; display: flex; border: 1px solid lightgrey; border-right: none}
+      .search-input .input-box input[type=text] {flex: 2; border: none; margin: 0; padding: 0 0 0 5px;}
+
+      #search, .search-input input, .article .headline {font-size: 1.1em;}
+      .search-input input.button {border: none; cursor:pointer;}
+      .search-input input.button-search {color:white; background: red; margin: 0; padding:5px 10px;}
+      .search-input input.button-search:active {background: black;}
+      .search-input input.button-clear {color:grey; background: none; padding: 0 10px; margin:0;}
+      .search-input input.button-clear:active {color: red;}
+
+      .suggestions {position: absolute; width: 100%; box-sizing: border-box;
+        background: white; padding: 0; margin: 0; list-style: none;
+        border: 1px solid lightgrey; border-top: none;}
+      .suggestions li {padding: 5px;}
+      .suggestions li.active {background-color: #e3e3e3; cursor: pointer;}
+
+      .article {margin: 5px;}
+      .article .headline {padding-bottom: 5px;}
+      .article ul {margin: 0;padding: 0; list-style: none;}
+      .article ul li {padding-left: 30px; text-indent: -20px;}
+      .article ul li:before {content: "—"; padding-right: 5px;}
+    </style>
+  </head>
+  <body>
+    <div class="content">
+      <div id="search">
+        <form action="/" method="get">
+          <div class="search-input">
+            <div class="input-box" style="">
+              <input type="text" name="q" value="{{.Q}}" autocomplete="off" autofocus="autofocus"/>
+              <input class="button button-clear" type="button" value="&#x2716;" />
+            </div>
+            <input class="button button-search" type="submit" value="Шукаць" />
+          </div>
+          <ul class="suggestions" style="display:none;">
+          </ul>
+        </form>
+      </div>
+      <script type="text/javascript">
+        class SearchControl {
+          constructor(el) {
+            this.el = el
+            this.input = el.querySelector('input[name=q]')
+            this.clearButton = el.querySelector('input[type=button].button-clear')
+            this.suggestions = el.querySelector('.suggestions')
+            this.form = el.querySelector('form')
+
+            this.input.addEventListener('input', () => {
+              this.onValueChange()
+            })
+            this.input.setSelectionRange(0, this.input.value.length)
+            this.updateClearButton()
+
+            this.clearButton.addEventListener('click', () => {
+              this.input.value = ''
+              this.onValueChange()
+            })
+
+            this.suggestions.addEventListener('mouseover', (ev) => {
+              if (ev.target == this.suggestions) {
+                return
+              }
+              this.activateSuggestion(ev.target)
+            })
+
+            this.suggestions.addEventListener('mouseleave', () => {
+              this.resetActiveSuggestion()
+            })
+
+            this.suggestions.addEventListener('click', (ev) => {
+              if (this.activeSuggestion) {
+                this.form.submit()
+              }
+            })
+          }
+
+          onValueChange() {
+            this.resetActiveSuggestion()
+            this.updateClearButton()
+            if (!this.input.value) {
+              this.suggestions.style.display = 'none'
+              return
+            } else {
+              fetch('/_suggest?q=' + encodeURIComponent(this.input.value))
+                .then((response) => response.json())
+                .then(this.updateSuggestions.bind(this))
+            }
+          }
+
+          updateSuggestions(suggestions) {
+            this.suggestions.innerHTML = ''
+
+            for (let suggestion of suggestions) {
+              let li = document.createElement('li')
+              li.innerText = suggestion
+              this.suggestions.appendChild(li)
+            }
+
+            this.suggestions.style.display = ''
+          }
+
+          activateSuggestion(li) {
+            if (!this.activeSuggestion) {
+              this.backupInputValue = this.input.value
+            } else {
+              this.activeSuggestion.classList.remove('active')
+            }
+
+            this.activeSuggestion = li
+            li.classList.add('active')
+            this.input.value = li.innerText
+          }
+
+          resetActiveSuggestion() {
+            if (this.activeSuggestion) {
+              this.input.value = this.backupInputValue
+              this.backupInputValue = ''
+              this.activeSuggestion.classList.remove('active')
+              this.activeSuggestion = null
+            }
+          }
+
+          updateClearButton() {
+            if (this.input.value.length > 0) {
+              this.clearButton.style.display = ''
+            } else {
+              this.clearButton.style.display = 'none'
+            }
+          }
+        }
+
+        new SearchControl(document.getElementById('search'))
+      </script>
+      {{range .Hits}}
+      <div class="article">
+        {{with ._source}}
+          <div class="headline">
+          {{range $i, $keyword := .keywords}}{{if $i}},{{end}} {{$keyword}}{{end}}
+          {{with .translations}}
+            &mdash;
+            {{range $i, $t := .}}<!--
+            -->{{if $i}},{{end}}
+              {{$t.value}}<!--
+              -->{{if $t.attr}}
+                <em>({{$t.attr}})</em><!--
+              -->{{end}}<!--
+            -->{{end}}
+          {{end}}
+          </div>
+          {{with .meanings}}
+            <ul>
+              {{range .}}<li>{{.}};</li>{{end}}
+            </ul>
+          {{end}}
+        {{end}}
+      </div>
+      {{end}}
+    </div>
+  </body>
+</html>
