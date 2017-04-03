@@ -5,20 +5,83 @@ import (
 	"html/template"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 )
 
-var esURL string
+// Configuration is a type that defines global application configuration
+type Configuration struct {
+	ElasticsearchURL string
+	RealHTTPSPort    uint16
+	HTTPSEnabled     bool
+	HTTPSCertFile    string
+	HTTPSKeyFile     string
+}
 
-func main() {
-	esURL = os.Getenv("ELASTICSEARCH_URL")
-	if len(esURL) == 0 {
+// Config is a global variable holding configuration of the application
+var Config = Configuration{
+	RealHTTPSPort: 10443,
+	HTTPSEnabled:  false,
+}
+
+// DefaultHTTPSPort browser default https port
+const DefaultHTTPSPort = 443
+
+func initConfig() {
+	Config.ElasticsearchURL = os.Getenv("ELASTICSEARCH_URL")
+	if len(Config.ElasticsearchURL) == 0 {
 		log.Fatalln("ELASTICSEARCH_URL env var is not set")
 	}
 
-	http.HandleFunc("/", func(w http.ResponseWriter, request *http.Request) {
+	httpsPortStr := os.Getenv("REAL_HTTPS_PORT")
+	if len(httpsPortStr) > 0 {
+		httpsPort, err := strconv.ParseUint(httpsPortStr, 10, 16)
+		if err != nil {
+			log.Fatalln("REAL_HTTPS_PORT value is invalid: ", err)
+		}
+		Config.RealHTTPSPort = uint16(httpsPort)
+	}
+
+	_, Config.HTTPSEnabled = os.LookupEnv("HTTPS_ENABLED")
+	if Config.HTTPSEnabled {
+		var ok bool
+		if Config.HTTPSCertFile, ok = os.LookupEnv("HTTPS_CERT_FILE"); !ok {
+			log.Fatalln("HTTPS_CERT_FILE is not specified")
+		}
+
+		if Config.HTTPSKeyFile, ok = os.LookupEnv("HTTPS_KEY_FILE"); !ok {
+			log.Fatalln("HTTPS_KEY_FILE is not specified")
+		}
+	}
+
+}
+
+func redirect(w http.ResponseWriter, req *http.Request) {
+	host, _, err := net.SplitHostPort(req.Host)
+	if err != nil {
+		log.Println("Could not split host and port of ", req.Host)
+		host = req.Host
+	}
+
+	if Config.RealHTTPSPort != DefaultHTTPSPort {
+		host = host + ":" + strconv.FormatUint(uint64(Config.RealHTTPSPort), 10)
+	}
+
+	target := "https://" + host + req.URL.Path
+	if len(req.URL.RawQuery) > 0 {
+		target += "?" + req.URL.RawQuery
+	}
+
+	http.Redirect(w, req, target, http.StatusTemporaryRedirect)
+}
+
+func main() {
+	initConfig()
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", func(w http.ResponseWriter, request *http.Request) {
 		q := request.FormValue("q")
 		var hits []map[string]interface{}
 		if len(q) > 0 {
@@ -39,7 +102,7 @@ func main() {
 				json.NewEncoder(pipeWriter).Encode(query)
 			}()
 
-			esResp, err := http.Post(esURL+"/dict-*/_search?pretty", "application/json", pipeReader)
+			esResp, err := http.Post(Config.ElasticsearchURL+"/dict-*/_search?pretty", "application/json", pipeReader)
 			if err != nil {
 				// TODO: handler error
 			}
@@ -74,7 +137,7 @@ func main() {
 		}
 	})
 
-	http.HandleFunc("/_suggest", func(w http.ResponseWriter, request *http.Request) {
+	mux.HandleFunc("/_suggest", func(w http.ResponseWriter, request *http.Request) {
 		request.ParseForm()
 		q := request.Form.Get("q")
 		// TODO: handle case when q is empty
@@ -82,7 +145,7 @@ func main() {
 		// TODO: handle error
 		_ = err
 
-		resp, err := http.Post(esURL+"/dict-*/_search", "application/json", strings.NewReader(`{
+		resp, err := http.Post(Config.ElasticsearchURL+"/dict-*/_search", "application/json", strings.NewReader(`{
 				"_source": false,
 				"suggest": {
 					"my-suggest": {
@@ -119,5 +182,12 @@ func main() {
 		json.NewEncoder(w).Encode(result)
 	})
 
-	http.ListenAndServe(":8080", nil)
+	if Config.HTTPSEnabled {
+		go func() {
+			log.Fatalln(http.ListenAndServe(":8080", http.HandlerFunc(redirect)))
+		}()
+		log.Fatalln(http.ListenAndServeTLS(":10443", Config.HTTPSCertFile, Config.HTTPSKeyFile, mux))
+	} else {
+		log.Fatalln(http.ListenAndServe(":8080", mux))
+	}
 }
