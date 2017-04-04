@@ -10,6 +10,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"golang.org/x/text/unicode/norm"
 )
 
 // Configuration is a type that defines global application configuration
@@ -29,6 +31,9 @@ var Config = Configuration{
 
 // DefaultHTTPSPort browser default https port
 const DefaultHTTPSPort = 443
+
+// AccentRune is the code of accent rune
+const AccentRune = 0x301
 
 func initConfig() {
 	Config.ElasticsearchURL = os.Getenv("ELASTICSEARCH_URL")
@@ -78,6 +83,33 @@ func redirect(w http.ResponseWriter, req *http.Request) {
 	http.Redirect(w, req, target, http.StatusTemporaryRedirect)
 }
 
+func highlightAccents(s string) template.HTML {
+	var result []byte
+	s = norm.NFD.String(s)
+	for len(s) > 0 {
+		d := norm.NFC.NextBoundaryInString(s, true)
+
+		hasAccentRune := false
+		for _, c := range s[:d] {
+			if c == AccentRune {
+				hasAccentRune = true
+				break
+			}
+		}
+
+		if hasAccentRune {
+			result = norm.NFC.AppendString(result, `<span class="accent">`)
+		}
+		result = norm.NFC.AppendString(result, s[:d])
+		if hasAccentRune {
+			result = norm.NFC.AppendString(result, `</span>`)
+		}
+
+		s = s[d:]
+	}
+	return template.HTML(result)
+}
+
 func main() {
 	initConfig()
 	mux := http.NewServeMux()
@@ -118,13 +150,17 @@ func main() {
 			esResp.Body.Close()
 		}
 
-		t, err := template.ParseFiles("index.gohtml")
+		funcMap := template.FuncMap{
+			"highlightAccents": highlightAccents,
+		}
+
+		t, err := template.New("main").Funcs(funcMap).ParseFiles("index.gohtml")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		err = t.Execute(w, struct {
+		err = t.ExecuteTemplate(w, "index.gohtml", struct {
 			Hits []map[string]interface{}
 			Q    string
 		}{
