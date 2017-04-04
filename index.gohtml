@@ -57,6 +57,8 @@
       <script type="text/javascript">
         class SearchControl {
           constructor(el) {
+            this.hideSuggestions = this.hideSuggestions.bind(this)
+
             this.el = el
             this.input = el.querySelector('input[name=q]')
             this.clearButton = el.querySelector('input[type=button].button-clear')
@@ -66,6 +68,46 @@
             this.input.addEventListener('input', () => {
               this.onValueChange()
             })
+            this.input.addEventListener('keydown', (ev) => {
+              switch(ev.code) {
+                case "Escape":
+                  ev.preventDefault()
+                  this.resetActiveSuggestion()
+                  this.hideSuggestions()
+                  break;
+                case "ArrowDown":
+                  if (this.activeSuggestion) {
+                    if (this.activeSuggestion.nextSibling) {
+                      this.activateSuggestion(this.activeSuggestion.nextSibling)
+                    } else {
+                      this.resetActiveSuggestion()
+                    }
+                  } else {
+                    let li = this.suggestions.querySelector('li:first-child')
+                    if (li) {
+                      this.activateSuggestion(li)
+                    }
+                  }
+                  ev.preventDefault()
+                  break;
+                case "ArrowUp":
+                  if (this.activeSuggestion) {
+                    if (this.activeSuggestion.previousSibling) {
+                      this.activateSuggestion(this.activeSuggestion.previousSibling)
+                    } else {
+                      this.resetActiveSuggestion()
+                    }
+                  } else {
+                    let li = this.suggestions.querySelector('li:last-child')
+                    if (li) {
+                      this.activateSuggestion(li)
+                    }
+                  }
+                  ev.preventDefault()
+                  break;
+              }
+            })
+
             this.input.setSelectionRange(0, this.input.value.length)
             this.updateClearButton()
 
@@ -97,7 +139,7 @@
             this.resetActiveSuggestion()
             this.updateClearButton()
             if (!this.input.value) {
-              this.suggestions.style.display = 'none'
+              this.hideSuggestions()
               return
             } else {
               fetch('/_suggest?q=' + encodeURIComponent(this.input.value))
@@ -106,8 +148,22 @@
             }
           }
 
+          showSuggestions() {
+            document.addEventListener('click', this.hideSuggestions)
+            this.suggestions.style.display = ''
+          }
+
+          hideSuggestions() {
+            document.removeEventListener('click', this.hideSuggestions)
+            this.suggestions.style.display = 'none'
+            this.suggestions.innerHTML = ''
+          }
+
           updateSuggestions(suggestions) {
             this.suggestions.innerHTML = ''
+            if (suggestions.length == 0) {
+              return
+            }
 
             for (let suggestion of suggestions) {
               let li = document.createElement('li')
@@ -115,7 +171,7 @@
               this.suggestions.appendChild(li)
             }
 
-            this.suggestions.style.display = ''
+            this.showSuggestions()
           }
 
           activateSuggestion(li) {
