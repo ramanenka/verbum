@@ -147,10 +147,14 @@
               this.hideSuggestions()
               return
             } else {
+              if (this.req) {
+                this.req.abort()
+              }
               this.req = new XMLHttpRequest()
               let self = this
               this.req.addEventListener('load', function() {
                 self.updateSuggestions(JSON.parse(this.responseText))
+                self.req = false
               })
               this.req.open('GET', '/_suggest?q=' + encodeURIComponent(this.input.value))
               this.req.send()
