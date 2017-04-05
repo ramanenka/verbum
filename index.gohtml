@@ -147,9 +147,13 @@
               this.hideSuggestions()
               return
             } else {
-              fetch('/_suggest?q=' + encodeURIComponent(this.input.value))
-                .then((response) => response.json())
-                .then(this.updateSuggestions.bind(this))
+              this.req = new XMLHttpRequest()
+              let self = this
+              this.req.addEventListener('load', function() {
+                self.updateSuggestions(JSON.parse(this.responseText))
+              })
+              this.req.open('GET', '/_suggest?q=' + encodeURIComponent(this.input.value))
+              this.req.send()
             }
           }
 
