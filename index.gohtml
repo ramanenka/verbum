@@ -5,7 +5,7 @@
     <title>Verbum - Анлайн Слоўнік Беларускай Мовы</title>
     <meta name="viewport" content="width=device-width">
     <style media="screen">
-      html {min-height: 100%; }
+      html {min-height: 100%;}
       body {margin: 0;}
 
       textarea, input[type="text"], input[type="button"], input[type="submit"] {
@@ -32,16 +32,20 @@
       .suggestions li {padding: 5px;}
       .suggestions li.active {background-color: #e3e3e3; cursor: pointer;}
 
-      .article {margin: 5px;}
-      .article .headline {padding-bottom: 5px; font-size: 1.3em;}
+      .article {margin: 6px;}
+      .article .headline {padding-bottom: 5px; font-size: 1.2em;}
       .article .headline .accent {color:red}
       .article ul {margin: 0;padding: 0; list-style: none;}
       .article ul li {padding-left: 30px; text-indent: -20px;}
       .article ul li:before {content: "—"; padding-right: 5px;}
+
+      .logo {color:darkgrey; padding: 6px;}
+      .logo span {color:red; font-size: xx-large;}
     </style>
   </head>
   <body>
     <div class="content">
+      <div class="logo"><span>Verbum</span> анлайн слоўнік</div>
       <div id="search">
         <form action="/" method="get">
           <div class="search-input">
