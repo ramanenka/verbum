@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 
+	"golang.org/x/text/transform"
 	"golang.org/x/text/unicode/norm"
 )
 
@@ -108,6 +109,15 @@ func highlightAccents(s string) template.HTML {
 		s = s[d:]
 	}
 	return template.HTML(result)
+}
+
+func removeAccents(s string) string {
+	t := transform.RemoveFunc(func(r rune) bool {
+		return r == AccentRune
+	})
+
+	result, _, _ := transform.String(t, s)
+	return result
 }
 
 func main() {
@@ -212,7 +222,7 @@ func main() {
 		_ = err
 		result := make([]string, 0, len(m.Suggest.MySuggest[0].Options))
 		for _, options := range m.Suggest.MySuggest[0].Options {
-			result = append(result, options.Text)
+			result = append(result, removeAccents(options.Text))
 		}
 
 		json.NewEncoder(w).Encode(result)
