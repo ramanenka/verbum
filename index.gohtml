@@ -176,10 +176,13 @@
           }
 
           updateSuggestions(suggestions) {
-            this.suggestions.innerHTML = ''
             if (suggestions.length == 0) {
+              this.hideSuggestions()
               return
+            } else {
+              this.suggestions.innerHTML = ''
             }
+
 
             for (let suggestion of suggestions) {
               let li = document.createElement('li')
