@@ -16,14 +16,15 @@
       #search {position:relative;}
       .search-input {margin: 0 0 0 0; display: flex; align-items: stretch;}
 
-      .search-input .input-box {flex: 2; display: flex; border: 1px solid lightgrey; border-right: none}
-      .search-input .input-box input[type=text] {flex: 2; border: none; margin: 0; padding: 0 0 0 5px;}
+      .search-input input[type=text] {flex: 2; margin: 0; padding: 0 0 0 5px; width:100%;
+        border: 1px solid lightgrey; border-right:none;}
 
       #search, .search-input input {font-size: 1.1em;}
       .search-input input.button {border: none; cursor:pointer;}
       .search-input input.button-search {color:white; background: red; margin: 0; padding:5px 10px;}
       .search-input input.button-search:active {background: black;}
-      .search-input input.button-clear {color:grey; background: none; padding: 0 10px; margin:0;}
+      .search-input input.button-clear {color:grey; background: none; padding: 0 10px; margin:0;
+        border: 1px solid lightgrey; border-right: none; border-left: none;}
       .search-input input.button-clear:active {color: red;}
 
       .suggestions {position: absolute; width: 100%; box-sizing: border-box;
@@ -52,10 +53,8 @@
       <div id="search">
         <form action="/" method="get">
           <div class="search-input">
-            <div class="input-box" style="">
-              <input type="text" name="q" value="{{.Q}}" autocomplete="off" autofocus="autofocus"/>
-              <input class="button button-clear" type="button" value="&#x2716;" />
-            </div>
+            <input type="text" name="q" value="{{.Q}}" autocomplete="off" autofocus="autofocus"/>
+            <input class="button button-clear" type="button" value="&#x2716;" />
             <input class="button button-search" type="submit" value="Шукаць" />
           </div>
           <ul class="suggestions" style="display:none;">
