@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gorilla/mux"
 	"golang.org/x/text/transform"
 	"golang.org/x/text/unicode/norm"
 )
@@ -122,8 +123,9 @@ func removeAccents(s string) string {
 
 func main() {
 	initConfig()
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", func(w http.ResponseWriter, request *http.Request) {
+	serveMux := http.NewServeMux()
+	rootRouter := mux.NewRouter()
+	rootRouter.HandleFunc("/", func(w http.ResponseWriter, request *http.Request) {
 		q := request.FormValue("q")
 		var hits []map[string]interface{}
 		if len(q) > 0 {
@@ -182,8 +184,10 @@ func main() {
 			return
 		}
 	})
+	rootRouter.PathPrefix("/").Handler(http.FileServer(http.Dir("./statics/")))
+	serveMux.Handle("/", rootRouter)
 
-	mux.HandleFunc("/_suggest", func(w http.ResponseWriter, request *http.Request) {
+	serveMux.HandleFunc("/_suggest", func(w http.ResponseWriter, request *http.Request) {
 		request.ParseForm()
 		q := request.Form.Get("q")
 		// TODO: handle case when q is empty
@@ -232,8 +236,8 @@ func main() {
 		go func() {
 			log.Fatalln(http.ListenAndServe(":8080", http.HandlerFunc(redirect)))
 		}()
-		log.Fatalln(http.ListenAndServeTLS(":10443", Config.HTTPSCertFile, Config.HTTPSKeyFile, mux))
+		log.Fatalln(http.ListenAndServeTLS(":10443", Config.HTTPSCertFile, Config.HTTPSKeyFile, serveMux))
 	} else {
-		log.Fatalln(http.ListenAndServe(":8080", mux))
+		log.Fatalln(http.ListenAndServe(":8080", serveMux))
 	}
 }

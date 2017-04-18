@@ -5,6 +5,7 @@ RUN set -ex \
 
 RUN go get golang.org/x/text/unicode/norm
 RUN go get golang.org/x/text/transform
+RUN go get github.com/gorilla/mux
 COPY *.go src/github.com/vadd/verbum/
 COPY index.gohtml index.gohtml
 RUN go install github.com/vadd/verbum
