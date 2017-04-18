@@ -25,3 +25,5 @@ _testmain.go
 
 vendor/
 /verbum
+*.crt
+*.key
