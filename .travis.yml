@@ -1,0 +1,15 @@
+sudo: required
+
+services:
+  - docker
+
+language: go
+go:
+  - 1.x
+
+install:
+  - go get -t -v ./...
+  - go install -v github.com/verbumby/verbum
+  - pwd
+  - ls -lah $GOPATH/bin
+  - ldd $GOPATH/bin/verbum
