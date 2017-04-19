@@ -10,6 +10,7 @@ go:
 install:
   - go get -t -v ./...
   - go install -v github.com/verbumby/verbum
-  - pwd
-  - ls -lah $GOPATH/bin
-  - ldd $GOPATH/bin/verbum
+
+script:
+  - go test -v ./...
+  - ./docker_build_image.sh
