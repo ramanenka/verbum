@@ -15,8 +15,7 @@ branches:
 env:
   global:
     - DOCKERHUB_USERNAME=vadramanenka
-    - secure: "jOC80SuEJxaOps4IX27j8oF6LhdSj5O0kBOpoqHOfJaIr5bOTX/Wy/svBOVXwNB1jf/f3VF6Dzm5MX3PjgPTBgp9yulJhkGTbQOZ1Kl4YU2+O+7hIEsdp2lAtozY1nImOYqo5pRkey2Hn2mKN4+SB6SBfSR2v/jNbz/0Brx1Iirwy+8WYwFOpX8Kmbo2aFegjnb/SRB4x2QM2z5wBaM59wn2NtRIdVRLnu6evMOBOxdKjnYFwicrHkGzmoQifbacX9B6jO02qWtbPL1xQfph29q+Q4f00LXCp6HHne/PDWfDTScR4YSm9LDm89BNs3O8wsboLDpoZvbPWaUM5HvLRHkg8T7CMpcqkCEvm0WJL1IxB8201T51pk9DbRc0NccA+Hl2dMpGMzuPdKK2FwFnjB900NkHdkNNG6LNXyIq4C9fvDc2Ark6MBxFW+LOIudAP8TbZ4WdespWguTntyDZqXsJbnEVcc6qCDVkh/Bm4annug+Sy6Ok1X/m9YRBudN83E225uU5dGLzGmjFNhcDnw3ukmZQ/Og6GG+bsaqH89jt/SKhgMW9weTlcsSI+iuFuutsIPOcTeb8DnMoslGHmQdJq6ocZ2pPrsruk3cltmcyXhQz3vNYYmTlQzvVIrLCqnDoEHuOS9g12/U/bh0DRidhymZ/yjCLZ+O7MfCtxTc="
-    - secure: "kP0uV65TvNytAnjw7hRI2wmL0ePH5hyu5XMPA9tcEkyopAe0+oIUePxtClxomJir20XZAKz4/VF2dQjJPaaNWPk/nca/YmuSAvTZJnW0cpy2Pl93Zax1/9pIm9eZo++1MvtSCg/rvwLyDRdFQiMe/Lde5cvlWwdQgqO0Ra2go18cmlQFaZdUG3syppGHkJcE8yXViEc/kzX5xD/o6AHQWGxSUtwfvqbp9+WWPXd0DBDoJZMRoeRDVq2VL6CDHb8xXvspW+wGZxHclG2lcoenH80qn6OwwTvgVzkbQ+DvwIQLn2MOCbBzGLpR00FZHwJOXxGRYwofTjA36GLT1Hzvkw7tDb+vgshoR/xjfxcNFcPuIIJVFhRAoAxORv/0nTWKvyICzJtrOyhZMZTRQ+V6oaMfmUfIzuR2dxU6fEfmBy0ylP/bxep/Bfc4CTZW4PFM5n4nICG7WZkAcSh5uU5v1uI19JLtL8VnxAorXGE0FvCksoLDYWZ73UVeVodX0a/gEi+o7NJY6ISyjqitJ4C6RoMnBBlmfJA8kA7XAm1uAiJTKlroaGWchvuWV9uqOXRpqY0NEto75JVQvmlHyZPYxKtEyBmicCNuRGeb8w1SRHti+aQxcDv/x+u8ni/ef0iorLLbitEu+h9Wom1Gl/OQpJ2vlMRfbGFO66I7iYXcmbE="
+    - secure: "YoezX0az9ePp7OQDtHdJnXpSYFfpFUP0aN7XzWbh/oiDMar3PoQLgt3M+NpPtCT2SoGkSVpukYEvxjwJl/Iz3fLBjDYv3MyV5qWZY5h9JDcvF6Fok/xw5wOLIpjghQ1SLqpdlWinMIAwoUWSEqe9SqnrqOVGyYEDVkls3QnjkhpPfZoD/r/zGcUhfiisnBr7/sw/CDLHBc3Qmo1dO/Ksav4ZgHpCXyfD4Evl/TTcrUAUOsu6foMrikNY3q6ztW49zbPe7VNVOQ1uoYWTM/sSKLQCD930+mtLyCpR+51Xe/4nu3+5Ms6UCIYjgUkRC9rYjciGpyvLqFjL4R1kKWKCOWvKdsooEF6Ed0QEePTwEO6PKcjhMHbslAP7SfjsFFmD1bepzal1lNo4BsrmW9W1ptAXXECRv03luXD6ER8lO7u6Kl7YMUuSBwYPoIazfxCG+SCPyH+8d3ux4QuEb4V7zyxt53C5nKHmFUxDiJGDfTFeDtyFXlfBYNT/6MCraZC9mdlVL3eY/8of5K8n8Tp/5euBfSPKSmCY0rwNHF7p0oMcjQxgYeZZnRnrhS38of0ZmrEFj2Ae2SyH+4Hamy8O4C2pq3TuhmbI8g9ziPjuUSajT5VjKY84FoxzJ5cLS1f4xkyKSZNB1GWJBKbXgTV/+AN3s9dkeQvVM8JX8yN1tBM="
 
 install:
   - go get -t -v ./...
@@ -27,9 +26,8 @@ script:
   - ./docker_build_image.sh
 
 after_success:
-  - if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
-      echo $DOCKERHUB_USERNAME
-      echo $MYVAR
+  - |
+    if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
       docker login -u="$DOCKERHUB_USERNAME" -p="$DOCKERHUB_PASSWORD";
       docker push verbumby/web;
     fi
