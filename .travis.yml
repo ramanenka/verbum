@@ -1,0 +1,32 @@
+sudo: required
+
+services:
+  - docker
+
+language: go
+
+go:
+  - 1.x
+
+branches:
+  only:
+  - master
+
+env:
+  global:
+    - DOCKERHUB_USERNAME=vadramanenka
+    - secure: "jOC80SuEJxaOps4IX27j8oF6LhdSj5O0kBOpoqHOfJaIr5bOTX/Wy/svBOVXwNB1jf/f3VF6Dzm5MX3PjgPTBgp9yulJhkGTbQOZ1Kl4YU2+O+7hIEsdp2lAtozY1nImOYqo5pRkey2Hn2mKN4+SB6SBfSR2v/jNbz/0Brx1Iirwy+8WYwFOpX8Kmbo2aFegjnb/SRB4x2QM2z5wBaM59wn2NtRIdVRLnu6evMOBOxdKjnYFwicrHkGzmoQifbacX9B6jO02qWtbPL1xQfph29q+Q4f00LXCp6HHne/PDWfDTScR4YSm9LDm89BNs3O8wsboLDpoZvbPWaUM5HvLRHkg8T7CMpcqkCEvm0WJL1IxB8201T51pk9DbRc0NccA+Hl2dMpGMzuPdKK2FwFnjB900NkHdkNNG6LNXyIq4C9fvDc2Ark6MBxFW+LOIudAP8TbZ4WdespWguTntyDZqXsJbnEVcc6qCDVkh/Bm4annug+Sy6Ok1X/m9YRBudN83E225uU5dGLzGmjFNhcDnw3ukmZQ/Og6GG+bsaqH89jt/SKhgMW9weTlcsSI+iuFuutsIPOcTeb8DnMoslGHmQdJq6ocZ2pPrsruk3cltmcyXhQz3vNYYmTlQzvVIrLCqnDoEHuOS9g12/U/bh0DRidhymZ/yjCLZ+O7MfCtxTc="
+
+install:
+  - go get -t -v ./...
+  - go install -v github.com/verbumby/verbum
+
+script:
+  - go test -v ./...
+  - ./docker_build_image.sh
+
+after_success:
+  - if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
+      docker login -u="$DOCKERHUB_USERNAME" -p="$DOCKERHUB_PASSWORD";
+      docker push verbumby/web;
+    fi
