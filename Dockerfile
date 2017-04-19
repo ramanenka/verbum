@@ -6,9 +6,9 @@ RUN set -ex \
 RUN go get golang.org/x/text/unicode/norm
 RUN go get golang.org/x/text/transform
 RUN go get github.com/gorilla/mux
-COPY *.go src/github.com/vadd/verbum/
+COPY *.go src/github.com/verbumby/verbum/
 COPY index.gohtml index.gohtml
-RUN go install github.com/vadd/verbum
+RUN go install github.com/verbumby/verbum
 
 EXPOSE 8080 10443
 
