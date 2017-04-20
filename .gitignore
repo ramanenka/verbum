@@ -27,3 +27,4 @@ vendor/
 /verbum
 *.crt
 *.key
+statics/node_modules/
