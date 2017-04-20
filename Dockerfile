@@ -10,6 +10,9 @@ COPY *.go src/github.com/verbumby/verbum/
 COPY index.gohtml index.gohtml
 RUN go install github.com/verbumby/verbum
 
+COPY statics/node_modules/components-font-awesome/css/font-awesome.min.css statics/node_modules/components-font-awesome/css/font-awesome.min.css
+COPY statics/node_modules/components-font-awesome/fonts/* statics/node_modules/components-font-awesome/fonts/
+
 EXPOSE 8080 10443
 
 CMD ["verbum"]

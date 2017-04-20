@@ -121,6 +121,15 @@ func removeAccents(s string) string {
 	return result
 }
 
+func staticURL(file string) string {
+	info, err := os.Stat("./statics" + file)
+	if err != nil {
+		panic(err)
+	}
+
+	return file + "?" + strconv.FormatInt(info.ModTime().UnixNano(), 10)
+}
+
 func main() {
 	initConfig()
 	serveMux := http.NewServeMux()
@@ -164,6 +173,7 @@ func main() {
 
 		funcMap := template.FuncMap{
 			"highlightAccents": highlightAccents,
+			"staticURL":        staticURL,
 		}
 
 		t, err := template.New("main").Funcs(funcMap).ParseFiles("index.gohtml")
